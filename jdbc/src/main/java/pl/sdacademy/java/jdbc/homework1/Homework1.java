@@ -3,6 +3,9 @@ package pl.sdacademy.java.jdbc.homework1;
 import pl.sdacademy.java.jdbc.model.Actor;
 import pl.sdacademy.java.jdbc.utils.ApplicationPropertiesProvider;
 
+import java.sql.*;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -23,6 +26,28 @@ public class Homework1 {
     }
 
     public static List<Actor> getActors(String jdbcUrl, String query) {
-        throw new UnsupportedOperationException("TODO");
+        if (query == null || query.isBlank() || query.length()<3) {
+            return Collections.emptyList();
+        }
+        final List<Actor> actors = new LinkedList<>();
+        try (final Connection connection = DriverManager.getConnection(jdbcUrl)) {
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT first_name, last_name FROM actor WHERE first_name LIKE UPPER(?) OR last_name LIKE UPPER(?) ORDER BY last_name, first_name;");
+            preparedStatement.setString(1, "%" + query + "%");
+            preparedStatement.setString(2,"%" + query + "%");
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+
+                Actor actor = new Actor(
+                        resultSet.getString("first_name"),
+                        resultSet.getString("last_name")
+                );
+                actors.add(actor);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return actors;
     }
-}
+    }
+
